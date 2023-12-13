@@ -1,14 +1,19 @@
+import product from '@/sanityecommerce/schemas/product';
 import React, { useState, useContext, createContext } from 'react'
+import toast, { Toast } from 'react-hot-toast';
 
 const Context = createContext();
 
 export const StateContext = ({children}) => {  //почему мы передаем children, зачем 
     // const [add, setAdd] = useState([]);
     const [qty, setQty] = useState(1);
-    const [cartItem, setCartItems] = useState([]);
+    const [cartItems, setCartItems] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0)
     const [totalQuantities, settotalQuantities] = useState(0)
     const [showCart, setShowCart] = useState(false)
+
+    let foundProduct;
+    let index; 
 
     const incQty = () => {
         setQty((prevQty) => prevQty+1)
@@ -22,17 +27,17 @@ export const StateContext = ({children}) => {  //почему мы переда�
     }
 
     const onAdd = (product, quantity) => {
-        const checkProductInCart = cartItem.find((item) => item._id === product._id);
+        const checkProductInCart = cartItems?.find((item) => item?._id === product?._id);
 
-        setTotalPrice((prevTotalPrice) => prevTotalPrice + product.price * quantity);
+        setTotalPrice((prevTotalPrice) => prevTotalPrice + product?.price * quantity);
 
         settotalQuantities((prevTotalQuantities) => prevTotalQuantities + quantity)
 
         if(checkProductInCart) {
-            const updateCartItems = cartItem.map((cartProduct) => {
-                if(cartProduct._id === product._id) return {
+            const updateCartItems = cartItems.map((cartProduct) => {
+                if(cartProduct?._id === product?._id) return {
                     ...cartProduct,
-                    quantity: cartProduct.quantity + quantity
+                    quantity: cartProduct?.quantity + quantity
                 }
                 
             });
@@ -42,13 +47,43 @@ export const StateContext = ({children}) => {  //почему мы переда�
         else {
             product.quantity = quantity
 
-            setCartItems([ ...cartItem ,product])
+            setCartItems([ ...cartItems ,product])
         }
+
+        toast.success(`${qty} ${product.name} added to the cart `)
 
     }
 
     const toggleCartItemQuantity = (id, value) => {
-        
+        foundProduct = cartItems.find((item) => item._id === id);
+        index = cartItems.findIndex((product) => product._id === id )
+
+        const newCartItem = cartItems.filter((item) => (
+            item._id !=id
+         ) )
+
+        if(value === 'inc') {
+            setCartItems([...newCartItem, {...foundProduct, quantity: foundProduct.quantity+1}]);
+            setTotalPrice((prevTotalPrice) => prevTotalPrice + foundProduct.price )
+            settotalQuantities((prevTotalQuantities) => prevTotalQuantities + 1 )
+        }
+        else if(value === 'dec') {
+            if (foundProduct.quantity > 1) {
+                setCartItems([...newCartItem, {...foundProduct, quantity: foundProduct.quantity-1}])
+                setTotalPrice((prevTotalPrice) => prevTotalPrice - foundProduct.price )
+                settotalQuantities((prevTotalQuantities) => prevTotalQuantities - 1 )
+            }
+        }
+    }
+
+    const onRemove = (product) => {
+        foundProduct = cartItems.find((item) => item._id === product._id )
+
+        const newCartItem = cartItems.filter((item) => item._id !== product._id)
+        setCartItems(newCartItem)
+
+        setTotalPrice((prevTotalPrice) => prevTotalPrice - foundProduct.price * foundProduct.quantity )
+        settotalQuantities((prevTotalQuantities) => prevTotalQuantities - foundProduct.quantity )
     }
 
     return (
@@ -59,11 +94,14 @@ export const StateContext = ({children}) => {  //почему мы переда�
             onAdd,
             showCart,
             setShowCart,
-            cartItem,
+            cartItems,
             totalPrice,
             totalQuantities,
             setCartItems,
-            settotalQuantities
+            setTotalPrice,
+            settotalQuantities,
+            toggleCartItemQuantity,
+            onRemove
         }}  >
             {children}
         </Context.Provider>

@@ -58,18 +58,19 @@ export const StateContext = ({children}) => {  //почему мы переда�
         foundProduct = cartItems.find((item) => item._id === id);
         index = cartItems.findIndex((product) => product._id === id )
 
-        const newCartItem = cartItems.filter((item) => (
-            item._id !=id
-         ) )
+        const newCartItems = [...cartItems]
+
 
         if(value === 'inc') {
-            setCartItems([...newCartItem, {...foundProduct, quantity: foundProduct.quantity+1}]);
+            newCartItems[index] = { ...foundProduct, quantity: foundProduct.quantity + 1 };
+            setCartItems(newCartItems);
             setTotalPrice((prevTotalPrice) => prevTotalPrice + foundProduct.price )
             settotalQuantities((prevTotalQuantities) => prevTotalQuantities + 1 )
         }
         else if(value === 'dec') {
             if (foundProduct.quantity > 1) {
-                setCartItems([...newCartItem, {...foundProduct, quantity: foundProduct.quantity-1}])
+                newCartItems[index] = { ...foundProduct, quantity: foundProduct.quantity + 1 };
+                setCartItems(newCartItems);
                 setTotalPrice((prevTotalPrice) => prevTotalPrice - foundProduct.price )
                 settotalQuantities((prevTotalQuantities) => prevTotalQuantities - 1 )
             }
